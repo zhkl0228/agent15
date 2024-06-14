@@ -67,8 +67,13 @@ task determineVersion {
                     versionTag = versionTag[1..-1]
                 }
                 logger.quiet("Building version ${versionTag}.")
-            }
-            else {
+            } else if (versionTag.endsWith("-dirty")) {
+                if (versionTag.startsWith("v")) {
+                    versionTag = versionTag[1..-1]
+                }
+                versionTag = versionTag.replace("-dirty", "-SNAPSHOT")
+                logger.quiet("Building version ${versionTag}.")
+            } else {
                 logger.error("Version tag '${versionTag}' does not contain a valid version.");
             }
             project.version = versionTag
