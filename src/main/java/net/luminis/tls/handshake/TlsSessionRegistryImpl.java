@@ -36,13 +36,17 @@ public class TlsSessionRegistryImpl implements TlsSessionRegistry {
     private static final int DEFAULT_TICKET_LIFETIME_HOURS = 24;
     private static final int DEFAULT_TICKET_LENGTH = 128 / 8;
 
-    private Random randomGenerator = new SecureRandom();
-    private Map<BytesKey, Session> sessions = new ConcurrentHashMap<>();
+    private final Random randomGenerator = new SecureRandom();
+    private final Map<BytesKey, Session> sessions = new ConcurrentHashMap<>();
     private int ticketLifeTimeInSeconds;
 
     public TlsSessionRegistryImpl() {
         ticketLifeTimeInSeconds = (int) TimeUnit.HOURS.toSeconds(DEFAULT_TICKET_LIFETIME_HOURS);
-        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::cleanupExpiredPsks, 1, 1, TimeUnit.MINUTES);
+        Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread thread = new Thread(r, "cleanup-expired-psks");
+            thread.setDaemon(true);
+            return thread;
+        }).scheduleAtFixedRate(this::cleanupExpiredPsks, 1, 1, TimeUnit.MINUTES);
     }
 
     public TlsSessionRegistryImpl(int ticketLifeTimeInSeconds) {
