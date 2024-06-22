@@ -22,10 +22,11 @@ import net.luminis.tls.TlsConstants;
 import net.luminis.tls.TlsState;
 import net.luminis.tls.extension.ClientHelloPreSharedKeyExtension;
 
+import java.io.Closeable;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-public interface TlsSessionRegistry {
+public interface TlsSessionRegistry extends Closeable {
 
     NewSessionTicketMessage createNewSessionTicketMessage(byte ticketNonce, TlsConstants.CipherSuite selectedCipher, TlsState tlsState,
                                                           String selectedApplicationLayerProtocol);

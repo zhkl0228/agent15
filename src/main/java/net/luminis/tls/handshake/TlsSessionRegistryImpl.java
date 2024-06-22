@@ -27,6 +27,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -39,14 +40,21 @@ public class TlsSessionRegistryImpl implements TlsSessionRegistry {
     private final Random randomGenerator = new SecureRandom();
     private final Map<BytesKey, Session> sessions = new ConcurrentHashMap<>();
     private int ticketLifeTimeInSeconds;
+    private final ScheduledExecutorService executorService;
 
     public TlsSessionRegistryImpl() {
         ticketLifeTimeInSeconds = (int) TimeUnit.HOURS.toSeconds(DEFAULT_TICKET_LIFETIME_HOURS);
-        Executors.newSingleThreadScheduledExecutor(r -> {
+        executorService = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread thread = new Thread(r, "cleanup-expired-psks");
             thread.setDaemon(true);
             return thread;
-        }).scheduleAtFixedRate(this::cleanupExpiredPsks, 1, 1, TimeUnit.MINUTES);
+        });
+        executorService.scheduleAtFixedRate(this::cleanupExpiredPsks, 1, 1, TimeUnit.MINUTES);
+    }
+
+    @Override
+    public void close() {
+        executorService.shutdownNow();
     }
 
     public TlsSessionRegistryImpl(int ticketLifeTimeInSeconds) {

@@ -22,6 +22,7 @@ import net.luminis.tls.TlsConstants;
 import net.luminis.tls.compat.InputStreamCompat;
 
 import java.io.ByteArrayInputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -39,7 +40,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class TlsServerEngineFactory {
+public class TlsServerEngineFactory implements Closeable {
 
     private List<X509Certificate> serverCertificates;
     private PrivateKey certificateKey;
@@ -140,5 +141,10 @@ public class TlsServerEngineFactory {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("Missing key algorithm RSA");
         }
+    }
+
+    @Override
+    public void close() throws IOException {
+        tlsSessionRegistry.close();
     }
 }
